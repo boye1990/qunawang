@@ -29,7 +29,8 @@ npm start
 >  定义： 简单解释一下，context就相当于一个全局变量一样的，在一个组件树中，根组件传递值或者方法给子孙后代组件，需要一层一层的传，相当麻烦。
 而这个context，定义了组件树的共享上下文，使得传递值，不需要经过中间组件，也有人戏称为react中的虫洞。不要滥用Context，回影响组件的独立性。
 >  结构： 生产者< Provider > 消费者：< Consumer >
->  API:  createContext() 可传入context的默认值 
+>  API:  1.createContext(param) 创建context，传入的参数可作为默认值。
+         2.useContext(contextName) 传入context名字来消费context。它却带了老的contextType语法。
 ##### 单个context列子
 ```jsx
 // 引入context函数
@@ -135,6 +136,49 @@ function App() {
         </button>
         <Middle/>
       </OnlineContext.Provider>
+    </BatteryContext.Provider>
+  );
+}
+
+export default App;
+
+```
+##### useContext的用法
+```jsx
+    // 引入context函数
+import React, { createContext, useState, useContext } from 'react';
+
+// 通过createContext函数创建context，该函数可以传入一个context的默认值
+const BatteryContext = createContext();
+
+// 使用useContext来消费Context，就不需要写丑陋的Consumer标签了
+function Leaf() {
+  // 老式写法static contextType =  BatteryContext;
+  const battery = useContext(BatteryContext); //由于没有了this,所以我们需要用这个api来获取context,然后使用.其他的用法一样
+  return (
+     <h1>Battery: { battery }</h1>
+  );
+}
+
+// 创建一个中间组件
+function Middle() {
+  return (
+    <Leaf/>
+  );
+}
+
+function App() {
+  const [battery, setBattery] = useState(60);
+  return (
+    // 创建Context的Provider生产者
+    <BatteryContext.Provider value = { battery }>
+        <button
+          type='button'
+          onClick={() => setBattery(battery-1)}
+        >
+          Press
+        </button>
+        <Middle/>
     </BatteryContext.Provider>
   );
 }

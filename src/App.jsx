@@ -1,19 +1,15 @@
 // 引入context函数
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 // 通过createContext函数创建context，该函数可以传入一个context的默认值
 const BatteryContext = createContext();
 
-// 创建一个消费context的组件
+// 使用useContext来消费Context，就不需要写丑陋的Consumer标签了
 function Leaf() {
+  // 老式写法static contextType =  BatteryContext;
+  const battery = useContext(BatteryContext); //由于没有了this,所以我们需要用这个api来获取context,然后使用.其他的用法一样
   return (
-    // 创建context的消费这
-    <BatteryContext.Consumer>
-      {/* 使用context */}
-      {
-        battery => <h1>Battery: { battery }</h1>
-      }
-    </BatteryContext.Consumer>
+     <h1>Battery: { battery }</h1>
   );
 }
 
