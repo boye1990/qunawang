@@ -9,9 +9,18 @@ function App(props) {
       height: document.documentElement.clientHeight
     })
   }
-
+  const click = () => {
+    console.log(`conts:${conts}`)
+  }
   useEffect(()=>{
     document.title = conts
+  })
+  useEffect(() => {
+    document.querySelector('#size').addEventListener('click', click, false)
+    return () => {
+      document.querySelector('#size').removeEventListener('click', click, false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   })
   useEffect(() => {
     window.addEventListener('resize', onResize, false);
@@ -27,7 +36,11 @@ function App(props) {
       >
         Add
       </button>
-      <h1>{ `width:${size.width} height: ${size.height}`}</h1>
+      {
+        conts%2
+        ? <h1 id='size'>{ `width:${size.width} height: ${size.height}`}</h1>
+        : <span id='size'>{ `width:${size.width} height: ${size.height}`}</span>
+      }
     </div>
   )
 }
