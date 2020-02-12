@@ -239,6 +239,109 @@ export default App;
 
 ```
 
-### Suspense
-
 ### memo
+> React v16.6.0出了一些新的包装函数(wrapped functions)，一种用于函数组件PureComponent / shouldComponentUpdate形式的React.memo()
+> React.memo()是一个高阶函数，它与 React.PureComponent类似，但是一个函数组件而非一个类
+> 用途：使用在无状态函数组件上，代替 pureComponent 和 shouldComponentUpdate。减少不必要组件重复渲染
+
+##### 先看一下代码，未优化之前
+```jsx
+/**
+ * 这段代码2个组件，父组件App中每次点击Add按钮，就会修改state中conts的值。
+ * state的改变 => 组件重新渲染，同时也导致了子组件Foo的重新渲染。
+ * 但是Foo组件对state中的值无依赖，造成了不必要的渲染。这就是一个可以优化的点
+*/
+import React, { Component } from 'react';
+class Foo extends Component {
+  render() {
+    console.log('Foo执行render函数')
+    return null
+  }
+}
+class App extends Component {
+  state = {
+    conts : 0
+  }
+  render() {
+    return (
+      <div>
+        <button type='button' onClick={ ()=> this.setState({conts: this.state.conts+1}) }>Add</button>
+        <Foo name='Mike'/>
+        <h1>{this.state.conts}</h1>
+      </div>
+    )
+  }
+}
+
+export default App;
+
+```
+##### 使用生命周期函数 shouldComponentUpdate 对以上代码进行优化
+```jsx
+/**
+ * 在Foo组件中只有一个props那就是name属性，只要这个属性不变，Foo就可以不必重新渲染。
+ * 在Foo的生命周期函数shouldComponentUpdate添加一个判断条件，当条件真，返回false。不再执行render函数。
+*/
+import React, { Component } from 'react';
+class Foo extends Component {
+  shouldComponentUpdate(nextProps, nextState){
+    if(nextProps.name === this.props.name) {
+      return false
+    }
+  }
+  render() {
+    console.log('Foo执行render函数')
+    return null
+  }
+}
+class App extends Component {
+  state = {
+    conts : 0
+  }
+  render() {
+    return (
+      <div>
+        <button type='button' onClick={ ()=> this.setState({conts: this.state.conts+1}) }>Add</button>
+        <Foo name='Mike'/>
+        <h1>{this.state.conts}</h1>
+      </div>
+    )
+  }
+}
+
+export default App;
+
+```
+
+##### 使用 PureComponent 防止多余渲染
+```jsx
+/**
+ * react 提供了一个 PureComponent 来防止组件进行多余渲染。
+ * 但是PureComponent无法监测对象的属性的变化。所以假设当前组件对一个对象中的属性有依赖，这个属性变化了。
+ * PureComponent也无法监测。不会重新执行runder函数。
+*/
+import React, { Component, PureComponent } from 'react';
+class Foo extends PureComponent {
+  render() {
+    console.log('Foo执行render函数')
+    return null
+  }
+}
+class App extends Component {
+  state = {
+    conts : 0
+  }
+  render() {
+    return (
+      <div>
+        <button type='button' onClick={ ()=> this.setState({conts: this.state.conts+1}) }>Add</button>
+        <Foo name='Mike'/>
+        <h1>{this.state.conts}</h1>
+      </div>
+    )
+  }
+}
+
+export default App;
+
+```
