@@ -391,3 +391,70 @@ export default App;
     }
   },
 ```
+##### use state
+> 在函数组件中如何使用state，使用useState可以在函数组件中使用state。从此函数组件并不一定是无状态组件。
+```jsx
+import React, { useState } from 'react';
+function App(props) {
+  const [conts, setConts] = useState(0);
+  return (
+    <div>
+      <button
+       type='button'
+       onClick = {() => {setConts(conts+1)}}
+      >
+        Add
+      </button>
+      <h1>{conts}</h1>
+    </div>
+  )
+}
+
+export default App;
+
+```
+##### Effect Hooks
+1. 首先了解一下什么react的副作用1.绑定时间，2.网络请求，访问DOM
+2. 使用副作用的时机：Mount之后，Update之后，Unmount之前
+3. 对应的生命周期函数是：componentDidMount，componentDidUpdate， componentWillUnmount
+4. 现在我们可以使用useEffect函数来覆盖以上所有情况，一般情况useEffect函数是在render之后调用。也可以根据自定义状态来决定调用还是不调用。
+5. useEffect还有一个回调函数 Clean Callback，它是清除上一次副作用遗留下的状态。
+6. useEffect的回调函数第二个参数可以传入一个数组，当这个数组为空时，回调只执行一次。如果不传，则每次都会执行。如果传入非空数组，当数组元素变化时执行一次。
+```jsx
+import React, { useState, useEffect } from 'react';
+function App(props) {
+  const [conts, setConts] = useState(0);
+  const [size, setSize] = useState({width: document.documentElement.clientWidth, height: document.documentElement.clientHeight});
+  
+  const onResize = () => {
+    setSize({
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight
+    })
+  }
+
+  useEffect(()=>{
+    document.title = conts
+  })
+  useEffect(() => {
+    window.addEventListener('resize', onResize, false);
+    return () => {
+      window.removeEventListener('resize', onResize, false);
+    }
+  })
+  return (
+    <div>
+      <button
+       type='button'
+       onClick = {() => {setConts(conts+1)}}
+      >
+        Add
+      </button>
+      <h1>{ `width:${size.width} height: ${size.height}`}</h1>
+    </div>
+  )
+}
+
+export default App;
+
+```
