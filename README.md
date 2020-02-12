@@ -375,3 +375,19 @@ export default App;
 1. 函数组件无this问题
 2. 自定义Hook方便复用状态逻辑
 3. 副作用的关注点分离
+##### 添加eslint react-hooks 插件
+> npm i eslint-plugin-react-hooks -D
+
+> 并修改package.json文件
+
+```json
+  "eslintConfig": {
+    "extends": "react-app",
+    "plugins": [
+      "react-hooks"
+    ],
+    "rules": {
+      "react-hooks/rules-of-hooks": "error"
+    }
+  },
+```
