@@ -345,3 +345,33 @@ class App extends Component {
 export default App;
 
 ```
+##### 使用memo优化代码
+```jsx
+import React, { Component, memo } from 'react';
+const Foo = memo(function Foo(props) {
+  console.log('Foo执行render函数')
+  return null
+})
+class App extends Component {
+  state = {
+    conts : 0
+  }
+  render() {
+    return (
+      <div>
+        <button type='button' onClick={ ()=> this.setState({conts: this.state.conts+1}) }>Add</button>
+        <Foo name='Mike'/>
+        <h1>{this.state.conts}</h1>
+      </div>
+    )
+  }
+}
+
+export default App;
+```
+## React Hooks
+### Hooks的优势
+##### 优化类组件三大问题
+1. 函数组件无this问题
+2. 自定义Hook方便复用状态逻辑
+3. 副作用的关注点分离
