@@ -30,7 +30,7 @@ npm start
 而这个context，定义了组件树的共享上下文，使得传递值，不需要经过中间组件，也有人戏称为react中的虫洞。不要滥用Context，会影响组件的独立性。
 >  结构： 生产者< Provider > 消费者：< Consumer >
 >  API:  1.createContext(param) 创建context，传入的参数可作为默认值。
-         2.useContext(contextName) 传入context名字来消费context。它却带了老的contextType语法。
+         2.useContext(contextName) 传入context名字来消费context。它取代了老的contextType语法。
 ##### 单个context列子
 ```jsx
 // 引入context函数
@@ -375,7 +375,7 @@ export default App;
 1. 函数组件无this问题
 2. 自定义Hook方便复用状态逻辑
 3. 副作用的关注点分离
-##### 添加eslint react-hooks 插件
+### 添加eslint react-hooks 插件
 > npm i eslint-plugin-react-hooks -D
 
 > 并修改package.json文件
@@ -391,7 +391,7 @@ export default App;
     }
   },
 ```
-##### use state
+### use state
 > 在函数组件中如何使用state，使用useState可以在函数组件中使用state。从此函数组件并不一定是无状态组件。
 ```jsx
 import React, { useState } from 'react';
@@ -413,7 +413,7 @@ function App(props) {
 export default App;
 
 ```
-##### Effect Hooks
+### Effect Hooks
 1. 首先了解一下什么react的副作用1.绑定时间，2.网络请求，访问DOM
 2. 使用副作用的时机：Mount之后，Update之后，Unmount之前
 3. 对应的生命周期函数是：componentDidMount，componentDidUpdate， componentWillUnmount
@@ -451,6 +451,91 @@ function App(props) {
         Add
       </button>
       <h1>{ `width:${size.width} height: ${size.height}`}</h1>
+    </div>
+  )
+}
+export default App;
+```
+
+### 在hooks中用useContext使用Context
+```jsx
+import React, { Component, useState, createContext, useContext } from 'react';
+const CountContext = createContext();
+
+//传统消费者生产者模式使用context
+class Foo extends Component {
+  render() {
+    return (
+      <CountContext.Consumer>
+        {
+          count => <h1>{count}</h1>
+        }
+      </CountContext.Consumer>
+    )
+  }
+}
+
+//使用contextType使用context
+class Bar extends Component {
+  static contextType = CountContext
+  render() {
+    const count = this.context
+    return (
+      <h1>{count}</h1>
+    )
+  }
+}
+
+//使用useContext在hooks中使用context
+function Last(props) {
+  const count = useContext(CountContext)
+  return (
+    <h1>{count}</h1>
+  )
+}
+
+function App(props) {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <button type='button' onClick= { () => setCount(count+1)}>
+        Add
+      </button>
+      <CountContext.Provider value = {count}>
+        <Foo/>
+        <Bar/>
+        <Last/>
+      </CountContext.Provider>
+    </div>
+  )
+}
+
+export default App;
+
+```
+
+### useMemo的用法
+> useMemo和uesEffect一样有2个参数，第一个参数为函数，第二个参数为一个数组。不传则每次都执行，传入了只有当值变化的时候才会执行第一个参数。用于优化一些不必要重复执行的逻辑。
+```jsx
+import React, { useState, useMemo } from 'react';
+
+function Last(props) {
+  return (
+    <h1>click: {props.click} double: {props.double}</h1>
+  )
+}
+function App(props) {
+  const [count, setCount] = useState(0);
+  const double = useMemo(() => {
+    return count * 2
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count===3])
+  return (
+    <div>
+      <button type='button' onClick= { () => setCount(count+1)}>
+        Add
+      </button>
+      <Last click={count} double={double}/>
     </div>
   )
 }

@@ -1,46 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+
+function Last(props) {
+  return (
+    <h1>click: {props.click} double: {props.double}</h1>
+  )
+}
 function App(props) {
-  const [conts, setConts] = useState(0);
-  const [size, setSize] = useState({width: document.documentElement.clientWidth, height: document.documentElement.clientHeight});
-  
-  const onResize = () => {
-    setSize({
-      width: document.documentElement.clientWidth,
-      height: document.documentElement.clientHeight
-    })
-  }
-  const click = () => {
-    console.log(`conts:${conts}`)
-  }
-  useEffect(()=>{
-    document.title = conts
-  })
-  useEffect(() => {
-    document.querySelector('#size').addEventListener('click', click, false)
-    return () => {
-      document.querySelector('#size').removeEventListener('click', click, false)
-    }
+  const [count, setCount] = useState(0);
+  const double = useMemo(() => {
+    return count * 2
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  })
-  useEffect(() => {
-    window.addEventListener('resize', onResize, false);
-    return () => {
-      window.removeEventListener('resize', onResize, false);
-    }
-  })
+  }, [count===3])
   return (
     <div>
-      <button
-       type='button'
-       onClick = {() => {setConts(conts+1)}}
-      >
+      <button type='button' onClick= { () => setCount(count+1)}>
         Add
       </button>
-      {
-        conts%2
-        ? <h1 id='size'>{ `width:${size.width} height: ${size.height}`}</h1>
-        : <span id='size'>{ `width:${size.width} height: ${size.height}`}</span>
-      }
+      <Last click={count} double={double}/>
     </div>
   )
 }
