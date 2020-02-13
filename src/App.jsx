@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { creatSet, creatAdd, creatRemove, creatToggle } from './Action.js';
 import './App.css';
 
 let idSeq = Date.now();
@@ -8,7 +9,7 @@ let LS_KEY = '$_todoList_'
 // 输入待办事件的输入框组件
 function Control(props) {
   // 通过解构 获取父组件传递的addtodo方法
-  const { addTodo } = props;
+  const { dispatch } = props;
   const inputRef = useRef()
 
   const onSubmit = (e) => { 
@@ -20,11 +21,11 @@ function Control(props) {
       return
     }
     
-    addTodo({
+    dispatch(creatAdd({
       id: ++idSeq,
       complete: false,
       text: newText
-    })
+    }))
     // 清空input的值
     inputRef.current.value = '';
   }
@@ -46,14 +47,14 @@ function Control(props) {
 
 // 单项待办事件组件
 function TodoItem(props) {
-  const { removeTodo, toggleTodo, todo: {id, text, complete} } = props;
+  const { dispatch, todo: {id, text, complete} } = props;
 
   const onChange = () => {
-    toggleTodo(id)
+    dispatch(creatToggle(id))
   }
 
   const onRemove = () => {
-    removeTodo(id)
+    dispatch(creatRemove(id))
   }
 
   return (
@@ -71,16 +72,14 @@ function TodoItem(props) {
 
 // 展示待办事件列表组件
 function Todos(props) {
-  const { removeTodo, toggleTodo, todos } = props
-  console.log(todos)
+  const { dispatch, todos } = props
   return (
     <ul className='todos'>
         {
           todos.map(todo => {
             return (<TodoItem
                       key={todo.id}
-                      removeTodo={removeTodo}
-                      toggleTodo={toggleTodo}
+                      dispatch={dispatch}
                       todo={todo}
                    />)
           })
@@ -93,37 +92,48 @@ function TodoList() {
   // 待办事件列表
   const [todos, setTodos] = useState([]);
 
-  // 添加待办事件的方法
-  const addTodo = useCallback((todo) => {
-    setTodos(todos => [...todos, todo]);
-  }, []);
+  const dispatch = useCallback((action) => {
+    const { type, payload} = action;
+    switch (type) {
+      case 'set':
+        setTodos(payload);
+        break;
 
-  // 删除待办事件的方法
-  const removeTodo = useCallback((id) => {
-    setTodos(todos => todos.filter((todo) => {
-        return todo.id !== id
-      })
-    )
-  }, []);
+      // 添加待办事件的方法
+      case 'add':
+        setTodos(todos => [...todos, payload]);
+        break;
 
-  // 修改待办事件状态的方法
-  const toggleTodo = useCallback((id) => {
-    setTodos(todos => 
-      todos.map((todo) => {
-        return todo.id === id
-                ? {
-                  ...todo,
-                  complete: !todo.complete
-                }
-                : todo;
-      })
-    )
-  }, []); 
+      // 删除待办事件的方法 
+      case 'remove':
+        setTodos(todos => todos.filter((todo) => {
+          return todo.id !== payload
+          })
+        )
+        break;
+
+      // 修改待办事件状态的方法
+      case 'toggle':
+        setTodos(todos => 
+          todos.map((todo) => {
+            return todo.id === payload
+                    ? {
+                      ...todo,
+                      complete: !todo.complete
+                    }
+                    : todo;
+          })
+        )
+        break;
+      default:
+        break;
+    }
+  }, [])
 
   useEffect(()=> {
     const todos = JSON.parse(localStorage.getItem(LS_KEY) || [])
-    setTodos(todos)
-  }, [])
+    dispatch(creatSet(todos))
+  }, [dispatch])
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(todos));
@@ -131,8 +141,8 @@ function TodoList() {
 
   return (
     <div className='todo-list'>
-      <Control addTodo={addTodo}/>
-      <Todos removeTodo={removeTodo} toggleTodo={toggleTodo} todos={todos}/>
+      <Control dispatch={dispatch}/>
+      <Todos dispatch={dispatch} todos={todos}/>
     </div>
   )
 }
