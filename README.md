@@ -414,7 +414,7 @@ export default App;
 
 ```
 ### Effect Hooks
-1. 首先了解一下什么react的副作用1.绑定时间，2.网络请求，访问DOM
+1. 首先了解一下什么react的副作用1.绑定时间，2.网络请求，3.访问DOM
 2. 使用副作用的时机：Mount之后，Update之后，Unmount之前
 3. 对应的生命周期函数是：componentDidMount，componentDidUpdate， componentWillUnmount
 4. 现在我们可以使用useEffect函数来覆盖以上所有情况，一般情况useEffect函数是在render之后调用。也可以根据自定义状态来决定调用还是不调用。
@@ -514,7 +514,7 @@ export default App;
 
 ```
 
-### useMemo的用法
+### useMemo 和 useCallback的用法
 > useMemo和uesEffect一样有2个参数，第一个参数为函数，第二个参数为一个数组。不传则每次都执行，传入了只有当值变化的时候才会执行第一个参数。用于优化一些不必要重复执行的逻辑。
 ```jsx
 import React, { useState, useMemo } from 'react';
@@ -543,3 +543,135 @@ function App(props) {
 export default App;
 
 ```
+> 讲完了useMemo，接下来是useCallback。useCallback跟useMemo比较类似，但它返回的是缓存的函数。我们看一下最简单的用法：
+
+> const fnA = useCallback(fnB, [a])
+
+> 上面的useCallback会将我们传递给它的函数fnB返回，并且将这个结果缓存；当依赖a变更时，会返回新的函数。既然返回的是函数，我们无法很好的判断返回的函数是否变更，所以我们可以借助ES6新增的数据类型Set来判断，具体如下：
+
+```jsx
+import React, { useState, useCallback } from 'react';
+ 
+const set = new Set();
+ 
+export default function Callback() {
+    const [count, setCount] = useState(1);
+    const [val, setVal] = useState('');
+ 
+    const callback = useCallback(() => {
+        console.log(count);
+    }, [count]);
+    set.add(callback);
+ 
+ 
+    return <div>
+        <h4>{count}</h4>
+        <h4>{set.size}</h4>
+        <div>
+            <button onClick={() => setCount(count + 1)}>+</button>
+            <input value={val} onChange={event => setVal(event.target.value)}/>
+        </div>
+    </div>;
+}
+```
+> 我们可以看到，每次修改count，set.size就会+1，这说明useCallback依赖变量count，count变更时会返回新的函数；而val变更时，set.size不会变，说明返回的是缓存的旧版本函数。知道useCallback有什么样的特点，那有什么作用呢？
+
+> 使用场景是：有一个父组件，其中包含子组件，子组件接收一个函数作为props；通常而言，如果父组件更新了，子组件也会执行更新；但是大多数场景下，更新是没有必要的，我们可以借助useCallback来返回函数，然后把这个函数作为props传递给子组件；这样，子组件就能避免不必要的更新
+```jsx
+import React, { useState, useCallback, useEffect } from 'react';
+function Parent() {
+    const [count, setCount] = useState(1);
+    const [val, setVal] = useState('');
+ 
+    const callback = useCallback(() => {
+        return count;
+    }, [count]);
+    return <div>
+        <h4>{count}</h4>
+        <Child callback={callback}/>
+        <div>
+            <button onClick={() => setCount(count + 1)}>+</button>
+            <input value={val} onChange={event => setVal(event.target.value)}/>
+        </div>
+    </div>;
+}
+ 
+function Child({ callback }) {
+    const [count, setCount] = useState(() => callback());
+    useEffect(() => {
+        setCount(callback());
+    }, [callback]);
+    return <div>
+        {count}
+    </div>
+}
+```
+> 不仅是上面的例子，所有依赖本地状态或props来创建函数，需要使用到缓存函数的地方，都是useCallback的应用场景。
+
+##### 总结
+> useEffect、useMemo、useCallback都是自带闭包的。也就是说，每一次组件的渲染，其都会捕获当前组件函数上下文中的状态(state, props)，所以每一次这三种hooks的执行，反映的也都是当前的状态，你无法使用它们来捕获上一次的状态。对于这种情况，我们应该使用ref来访问。
+
+### useRef 的用法
+>相信有过React使用经验的人对ref都会熟悉，它可以用来获取组件实例对象或者是DOM对象。而useRef这个hooks函数，除了传统的用法之外，它还可以“跨渲染周期”保存数据。首先来看一下它传统的用法
+
+```jsx
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+
+export default function App(props){
+  const [count, setCount] = useState(0);
+
+  const doubleCount = useMemo(() => {
+    return 2 * count;
+  }, [count]);
+
+  const couterRef = useRef();
+
+  useEffect(() => {
+    document.title = `The value is ${count}`;
+    console.log(couterRef.current);
+  }, [count]);
+  
+  return (
+    <>
+      <button ref={couterRef} onClick={() => {setCount(count + 1)}}>Count: {count}, double: {doubleCount}</button>
+    </>
+  );
+}
+
+```
+>代码中用useRef创建了couterRef对象，并将其赋给了button的ref属性。这样，通过访问couterRef.current就可以访问到button对应的DOM对象。然后再来看看它保存数据的用法。
+```jsx
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+
+export default function App(props){
+  const [count, setCount] = useState(0);
+
+  const doubleCount = useMemo(() => {
+    return 2 * count;
+  }, [count]);
+
+  const timerID = useRef();
+  
+  useEffect(() => {
+    timerID.current = setInterval(()=>{
+        setCount(count => count + 1);
+    }, 1000); 
+  }, []);
+  
+  useEffect(()=>{
+      if(count > 10){
+          clearInterval(timerID.current);
+      }
+  });
+  
+  return (
+    <>
+      <button ref={couterRef} onClick={() => {setCount(count + 1)}}>Count: {count}, double: {doubleCount}</button>
+    </>
+  );
+}
+
+```
+>在一个组件中有什么东西可以跨渲染周期，也就是在组件被多次渲染之后依旧不变的属性？第一个想到的应该是state。没错，一个组件的state可以在多次渲染之后依旧不变。但是，state的问题在于一旦修改了它就会造成组件的重新渲染。那么这个时候就可以使用useRef来跨越渲染周期存储数据，而且对它修改也不会引起组件渲染。
+
+>在上面的例子中，我用ref对象的current属性来存储定时器的ID，这样便可以在多次渲染之后依旧保存定时器ID，从而能正常清除定时器
