@@ -6,10 +6,26 @@ let idSeq = Date.now();
 
 let LS_KEY = '$_todoList_'
 
+/**
+ *@param actionCreators 需要派发的对象
+ *@param dispatch 派发方法
+ */
+function bindActionCreators(actionCreators, dispatch) {
+  const ret = {}
+  for (let key in actionCreators) {
+    ret[key] = function (...args) {
+      const actionCreator = actionCreators[key];
+      const action = actionCreator(...args);
+      dispatch(action)
+    };
+  }
+  return ret
+}
+
 // 输入待办事件的输入框组件
 function Control(props) {
   // 通过解构 获取父组件传递的addtodo方法
-  const { dispatch } = props;
+  const { addTodo } = props;
   const inputRef = useRef()
 
   const onSubmit = (e) => { 
@@ -21,11 +37,11 @@ function Control(props) {
       return
     }
     
-    dispatch(creatAdd({
+    addTodo({
       id: ++idSeq,
       complete: false,
       text: newText
-    }))
+    })
     // 清空input的值
     inputRef.current.value = '';
   }
@@ -47,14 +63,14 @@ function Control(props) {
 
 // 单项待办事件组件
 function TodoItem(props) {
-  const { dispatch, todo: {id, text, complete} } = props;
+  const { removeTodo, toggleTodo, todo: {id, text, complete} } = props;
 
   const onChange = () => {
-    dispatch(creatToggle(id))
+    toggleTodo(id)
   }
 
   const onRemove = () => {
-    dispatch(creatRemove(id))
+    removeTodo(id)
   }
 
   return (
@@ -72,14 +88,15 @@ function TodoItem(props) {
 
 // 展示待办事件列表组件
 function Todos(props) {
-  const { dispatch, todos } = props
+  const { toggleTodo, removeTodo, todos } = props
   return (
     <ul className='todos'>
         {
           todos.map(todo => {
             return (<TodoItem
                       key={todo.id}
-                      dispatch={dispatch}
+                      toggleTodo={toggleTodo}
+                      removeTodo={removeTodo}
                       todo={todo}
                    />)
           })
@@ -92,6 +109,7 @@ function TodoList() {
   // 待办事件列表
   const [todos, setTodos] = useState([]);
 
+  // 派发不同的action
   const dispatch = useCallback((action) => {
     const { type, payload} = action;
     switch (type) {
@@ -141,8 +159,18 @@ function TodoList() {
 
   return (
     <div className='todo-list'>
-      <Control dispatch={dispatch}/>
-      <Todos dispatch={dispatch} todos={todos}/>
+      <Control {
+        ...bindActionCreators({
+          addTodo: creatAdd
+        }, dispatch)
+      }/>
+      <Todos {
+        ...bindActionCreators({
+          removeTodo: creatRemove,
+          toggleTodo: creatToggle
+        }, dispatch)
+      }
+      todos={todos}/>
     </div>
   )
 }
