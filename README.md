@@ -815,3 +815,15 @@ export default App;
 > 在函数组件和自定义hooks函数中调用。意思是不能在普通函数中调用hooks函数。
 
 > 遵循这两条规则，和安装react-hooks的eslint插件。可以避免很多不必要的错误。
+
+### Hooks常见问题
+1. 生命周期函数如何映射到Hooks？
+2. 类实例成员变量如何映射到Hooks？
+3. Hooks中如何获取历史props和state？
+4. 如何强制更新一个Hooks组件？
+
+## redux
+### redux的概念和意义
+> 状态容器和数据流管理
+
+> redux三大原则 单一数据源 状态不可变 纯函数修改状态（没有副作用） 
