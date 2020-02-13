@@ -808,3 +808,10 @@ function App(props) {
 export default App;
 
 ```
+
+### hooks的使用法则
+> 仅在顶层调用，即不能在循环语句，条件语句，嵌套函数中调用hooks函数。因为react hooks依赖调用顺序。一但你的hooks不在顶层调用，在后续的代码逻辑中他们的调用顺序发生了变化，有可能到变量混乱或稀奇古怪的bug。
+
+> 在函数组件和自定义hooks函数中调用。意思是不能在普通函数中调用hooks函数。
+
+> 遵循这两条规则，和安装react-hooks的eslint插件。可以避免很多不必要的错误。
