@@ -1,22 +1,44 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-function Last(props) {
+function useCounter(count) {
   return (
-    <h1>click: {props.click} double: {props.double}</h1>
+    <h1>{count}</h1>
   )
 }
-function App(props) {
-  const [count, setCount] = useState(0);
-  const double = useMemo(() => {
-    return count * 2
+
+function useCount(defaultCount) {
+  const [count, setCount] = useState(defaultCount);
+  const it = useRef
+
+  useEffect(() => {
+    it.current = setInterval(() => {
+      setCount( count => count + 1);
+    }, 1000)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count===3])
+  }, [])
+
+  useEffect(() => {
+    if(count >=10) {
+      clearInterval(it.current)
+    }
+  })
+
+  return [count, setCount]
+}
+
+function App(props) {
+  const [count, setCount] = useCount(0);
+  const Counter = useCounter(count);
   return (
     <div>
-      <button type='button' onClick= { () => setCount(count+1)}>
+      <button
+        type="button"
+        onClick={() => setCount(count+1)}
+      >
         Add
       </button>
-      <Last click={count} double={double}/>
+      <h1>{count}</h1>
+      {Counter}
     </div>
   )
 }
