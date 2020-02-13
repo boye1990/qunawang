@@ -1,8 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 function useCounter(count) {
+  const size = useSize()
   return (
-    <h1>{count}</h1>
+    <div>
+      <h1>{`${size.width}x${size.height}`}</h1>
+      <h1>{count}</h1>
+    </div>
   )
 }
 
@@ -26,9 +30,33 @@ function useCount(defaultCount) {
   return [count, setCount]
 }
 
+function useSize(params) {
+  const [size, setSize] = useState({
+    width: document.documentElement.clientWidth,
+    height: document.documentElement.clientHeight,
+  })
+
+  const onResize = useCallback(() => {
+    setSize({
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    })
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('resize', onResize, false)
+    return () => {
+      window.removeEventListener('resize', onResize, false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return size
+}
+
 function App(props) {
   const [count, setCount] = useCount(0);
   const Counter = useCounter(count);
+  const size = useSize();
   return (
     <div>
       <button
@@ -39,6 +67,7 @@ function App(props) {
       </button>
       <h1>{count}</h1>
       {Counter}
+      <h1>{`${size.width}x${size.height}`}</h1>
     </div>
   )
 }
